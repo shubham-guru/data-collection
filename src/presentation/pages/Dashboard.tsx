@@ -36,13 +36,7 @@ const Dashboard = () => {
     }
   }, [ref]);
   const [resImage, setResImage] = useState<any>([]);
-  const [coordinates, setCoordinates] = useState<any>({
-    x: 0,
-    y: 0,
-    height: 0,
-    width: 0,
-    key: 0,
-  });
+  const [coordinates, setCoordinates] = useState<any>([]);
 
   const onImageChange = (e: any) => {
     setImageInfo(e.target.files[0]);
@@ -60,7 +54,7 @@ const Dashboard = () => {
       ]);
     }
   };
-console.log(selectedImageFolder, 'selected')
+  console.log(selectedImageFolder, "selected");
   const handleUpload = () => {
     // Global start
     setIsResponse(true);
@@ -75,28 +69,77 @@ console.log(selectedImageFolder, 'selected')
     // Global end
 
     if (mess) {
-      var outPutImg = new File([resImage[0]], "i.jpg", {type: resImage[0].type})
-      bodyFormData.append("imgs", outPutImg);
-      bodyFormData.append("coords", JSON.stringify(coordinates));
-      axios
-        .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
-        .then((res) => {
-          if (res.data.status === 200) {
-            setIsResponse(false);
-            Toast.fire({
-              icon: "success",
-              title: res.data.message,
+      console.log(resImage, selectedImageFolder[0]);
+      let outPutImg: any;
+      if (selectedImageFolder[0]!==undefined) {
+        let imgarr: any = [];
+        selectedImageFolder.forEach((ele: RequestInfo | URL, idx: any) => {
+          fetch(ele)
+            .then((r) => r.blob())
+            .then((blb) => {
+              outPutImg = new File([blb], ele.toString().split("/")[3], {
+                type: "image/jpg",
+              });
+              console.log(outPutImg);
+              imgarr.push(outPutImg);
+              if (idx === selectedImageFolder.length - 1) {
+                console.log(idx, imgarr, "98765879279873");
+                imgarr.forEach((element: string | Blob) => {
+                  bodyFormData.append("imgs", element);
+                });
+
+                bodyFormData.append("coords", JSON.stringify(coordinates));
+                axios
+                  .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
+                  .then((res) => {
+                    if (res.data.status === 200) {
+                      setIsResponse(false);
+                      Toast.fire({
+                        icon: "success",
+                        title: res.data.message,
+                      });
+                      // window.location.reload();
+                    } else {
+                      Toast.fire({
+                        icon: "error",
+                        title: res.data.message,
+                      });
+                    }
+                  });
+              }
             });
-            // window.location.reload();
-          } else {
-            Toast.fire({
-              icon: "error",
-              title: res.data.message,
-            });
-          }
         });
+      } 
+      else {
+
+        fetch(coordinates[0].src)
+          .then((r) => r.blob())
+          .then((blb) => {
+            outPutImg = new File([blb], coordinates[0].src.split("/")[3], { type: "image/jpg" });
+            console.log(outPutImg);
+            bodyFormData.append("imgs", outPutImg);
+            bodyFormData.append("coords", JSON.stringify(coordinates));
+            axios
+              .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
+              .then((res) => {
+                if (res.data.status === 200) {
+                  setIsResponse(false);
+                  Toast.fire({
+                    icon: "success",
+                    title: res.data.message,
+                  });
+                  // window.location.reload();
+                } else {
+                  Toast.fire({
+                    icon: "error",
+                    title: res.data.message,
+                  });
+                }
+              });
+          });
+      }
     } else {
-      if (imageInfo.length) {
+      if (imageInfo[0]) {
         for (let i = 0; i < imageInfo.length; i++) {
           bodyFormData.append("imgs", imageInfo[i]);
         }
@@ -139,19 +182,25 @@ console.log(selectedImageFolder, 'selected')
     }
   };
 
-  var isChecked:any = [];
-  const getCoordinates = (coordinates:any, checked:any) => {
-    setCoordinates({...coordinates,
-      x: coordinates.x,
-      y: coordinates.y,
-      width: coordinates.width,
-      height: coordinates.height,
-      key: coordinates.key,
-    });
+  var coordsarr: any = [];
+  const getCoordinates = (coordinate: any, checked: any) => {
+    setCoordinates([
+      ...coordinates,
+      {
+        x: coordinate.x,
+        y: coordinate.y,
+        width: coordinate.width,
+        height: coordinate.height,
+        key: coordinate.key,
+        src: coordinate.image,
+      },
+    ]);
     setResImage(coordinates.image);
-    console.log(coordinates)
-  }
-  console.log(resImage, 'dra')
+
+    coordsarr.push(coordinates);
+  };
+  console.log(resImage, "dra");
+  console.log(coordinates);
   return (
     <Box>
       <Card sx={{ textAlign: "right", padding: 2 }}>
@@ -190,8 +239,8 @@ console.log(selectedImageFolder, 'selected')
             Upload folder
             <input
               onChange={(e) => onImageChangeFolder(e)}
-              hidden
               ref={ref}
+              hidden
               accept="image/*"
               type="file"
             />
@@ -229,7 +278,10 @@ console.log(selectedImageFolder, 'selected')
           }}
         >
           {mess ? (
-            <DrawRect imageSrc={selectedImage} getCoordinates={getCoordinates} />
+            <DrawRect
+              imageSrc={selectedImage}
+              getCoordinates={getCoordinates}
+            />
           ) : (
             <img
               style={{
@@ -341,24 +393,21 @@ console.log(selectedImageFolder, 'selected')
             }}
           >
             {selectedImageFolder.map((src: any, key: number) => {
-              return (
-      
-                mess ? (
-                  <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
-                ) : (
-                  <img
+              return mess ? (
+                <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
+              ) : (
+                <img
                   key={key}
-                    style={{
-                      border: "solid 1px #000",
-                      padding: 5,
-                      borderRadius: "10px",
-                    }}
-                    src={src}
-                    width="60%"
-                    alt="image"
-                    draggable="false"
-                  />
-                )
+                  style={{
+                    border: "solid 1px #000",
+                    padding: 5,
+                    borderRadius: "10px",
+                  }}
+                  src={src}
+                  width="60%"
+                  alt="image"
+                  draggable="false"
+                />
               );
             })}
 

@@ -100,14 +100,12 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
         onMouseDown={(e: any) => handleMouseDown(e)}
         onMouseUp={(e: any) => handleMouseUp(e)}
         onMouseMove={(e: any) => handleMouseMove(e)}
-        width={900}
-        height={700}
+        width={700}
+        height={500}
       >
             <Layer>
             <Image
               image={image}
-              width={700}
-              height={500}
               alt="image"
               draggable={false}
             />
