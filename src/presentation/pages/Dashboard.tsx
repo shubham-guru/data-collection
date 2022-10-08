@@ -13,7 +13,6 @@ import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { authToken } from "../../constants";
 import axios from "axios";
 import { endpoints } from "../../domain/endpoints";
-import Swal from "sweetalert2";
 import { url } from "../../baseUrl";
 import loading from "../images/loading.gif";
 import Toast from "../components/SweetAlert";
@@ -36,25 +35,15 @@ const Dashboard = () => {
       ref.current.setAttribute("webkitdirectory", "");
     }
   }, [ref]);
-const [pointsArray, setPointsArray] = useState<any>([]);
+  const [resImage, setResImage] = useState<any>([]);
   const [coordinates, setCoordinates] = useState<any>({
     x: 0,
     y: 0,
+    height: 0,
+    width: 0,
+    key: 0,
   });
 
-  const markCoordinates = (
-    e: React.MouseEvent<HTMLImageElement, MouseEvent>
-  ) => {
-    setCoordinates({
-      ...coordinates,
-      x: e.nativeEvent.offsetX,
-      y: e.nativeEvent.offsetY,
-    });
-  };
-  const pushCoordinates = (e: any) => {
-    var markedPoints = { x: coordinates.x, y: coordinates.y };
-    pointsArray.push(markedPoints);
-  };
   const onImageChange = (e: any) => {
     setImageInfo(e.target.files[0]);
     setSelectedImage(URL.createObjectURL(e.target.files[0]));
@@ -71,7 +60,7 @@ const [pointsArray, setPointsArray] = useState<any>([]);
       ]);
     }
   };
-
+console.log(selectedImageFolder, 'selected')
   const handleUpload = () => {
     // Global start
     setIsResponse(true);
@@ -86,20 +75,19 @@ const [pointsArray, setPointsArray] = useState<any>([]);
     // Global end
 
     if (mess) {
-      bodyFormData.append("imgs", imageInfo);
-      bodyFormData.append("coords", JSON.stringify(pointsArray));
+      var outPutImg = new File([resImage[0]], "i.jpg", {type: resImage[0].type})
+      bodyFormData.append("imgs", outPutImg);
+      bodyFormData.append("coords", JSON.stringify(coordinates));
       axios
         .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
         .then((res) => {
-          console.log(bodyFormData, "payload");
           if (res.data.status === 200) {
-            console.log(res, "res");
             setIsResponse(false);
             Toast.fire({
               icon: "success",
               title: res.data.message,
             });
-            window.location.reload()
+            // window.location.reload();
           } else {
             Toast.fire({
               icon: "error",
@@ -121,7 +109,6 @@ const [pointsArray, setPointsArray] = useState<any>([]);
           if (res.data.status === 200) {
             setIsResponse(false);
             setOutput(res.data.data);
-            // console.log(output)
             Toast.fire({
               icon: "success",
               title: "Image uploaded successfully",
@@ -142,18 +129,6 @@ const [pointsArray, setPointsArray] = useState<any>([]);
   const handleFeedBack = (e: any) => {
     if (e.target.id === "yes") {
       window.location.reload();
-      const Toast = Swal.mixin({
-        toast: true,
-        position: "top-end",
-        showConfirmButton: false,
-        timer: 3000,
-        timerProgressBar: true,
-        didOpen: (toast) => {
-          toast.addEventListener("mouseenter", Swal.stopTimer);
-          toast.addEventListener("mouseleave", Swal.resumeTimer);
-        },
-      });
-
       Toast.fire({
         icon: "success",
         title: "Thanks for using the tool",
@@ -163,6 +138,20 @@ const [pointsArray, setPointsArray] = useState<any>([]);
       setMess(true);
     }
   };
+
+  var isChecked:any = [];
+  const getCoordinates = (coordinates:any, checked:any) => {
+    setCoordinates({...coordinates,
+      x: coordinates.x,
+      y: coordinates.y,
+      width: coordinates.width,
+      height: coordinates.height,
+      key: coordinates.key,
+    });
+    setResImage(coordinates.image);
+    console.log(coordinates)
+  }
+  console.log(resImage, 'dra')
   return (
     <Box>
       <Card sx={{ textAlign: "right", padding: 2 }}>
@@ -209,7 +198,6 @@ const [pointsArray, setPointsArray] = useState<any>([]);
           </Button>
         </ButtonGroup>
       </Card>
-
       {isResponse && (
         <div
           style={{
@@ -240,101 +228,28 @@ const [pointsArray, setPointsArray] = useState<any>([]);
             transform: "translateX(-50%)",
           }}
         >
-          <img
-            style={{
-              border: "solid 1px #000",
-              padding: 5,
-              borderRadius: "10px",
-            }}
-            src={selectedImage}
-            width="60%"
-            alt="image"
-            id="screenshot"
-            onMouseMove={(e) => markCoordinates(e)}
-            onClick={(e) => mess && pushCoordinates(e)}
-            draggable="false"
-          />
+          {mess ? (
+            <DrawRect imageSrc={selectedImage} getCoordinates={getCoordinates} />
+          ) : (
+            <img
+              style={{
+                border: "solid 1px #000",
+                padding: 5,
+                borderRadius: "10px",
+              }}
+              src={selectedImage}
+              width="60%"
+              alt="image"
+              draggable="false"
+            />
+          )}
+
           {mess && (
             <>
-              {pointsArray.map((points: any, key: number) => {
-                return (
-                  <>
-                    <h3 key={key}>
-                      x-coordinate [ {[key + 1]} ]: {points.x} <br />{" "}
-                      y-coordinate [ {[key + 1]} ]: {points.y}
-                    </h3>
-                    <Divider />
-                  </>
-                );
-              })}
               <Typography sx={{ color: "#666", fontWeight: "bold", margin: 2 }}>
                 Do it manually : Move your cursor on the image and click on the
                 4 end corners of the number plate
               </Typography>
-
-              <div
-                style={{
-                  width: "400px",
-                  height: "60px",
-                  margin: "auto",
-                  backgroundColor: "orange",
-                  position: "relative",
-                }}
-              >
-                Number Plate
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  1
-                </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    top: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  2
-                </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    bottom: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  3
-                </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  4
-                </span>
-              </div>
             </>
           )}
 
@@ -365,7 +280,7 @@ const [pointsArray, setPointsArray] = useState<any>([]);
             color="secondary"
             variant="outlined"
             onClick={() => {
-              window.location.reload()
+              window.location.reload();
             }}
             sx={{ margin: 2 }}
           >
@@ -411,213 +326,132 @@ const [pointsArray, setPointsArray] = useState<any>([]);
             </>
           )}
         </Card>
-      ) : imageInfo.length > 1 && (
-        <Card
-          elevation={0}
-          sx={{
-            padding: 5,
-            position: "absolute",
-            top: "50%",
-            left: "50%",
-            width: "80%",
-            textAlign: "center",
-            transform: "translateX(-50%)",
-          }}
-        >
-          {selectedImageFolder.map((src: any, key: number) => {
-            return (
-              <img
-                key={key}
-                style={{
-                  border: "solid 1px #000",
-                  padding: 5,
-                  borderRadius: "10px",
-                  marginBottom: 15,
-                }}
-                src={src}
-                width="60%"
-                alt="image"
-                id="image"
-                onMouseMove={(e) => markCoordinates(e)}
-                onClick={(e) => mess && pushCoordinates(e)}
-                draggable="false"
-              />
-            );
-          })}
-          
-          {mess && (
-            <>
-              {pointsArray.map((points: any, key: number) => {
-                return (
-                  <>
-                    <h6 key={key}>
-                      x-coordinate [ {[key + 1]} ]: {points.x} <br />{" "}
-                      y-coordinate [ {[key + 1]} ]: {points.y}
-                    </h6>
-                    <Divider />
-                  </>
-                );
-              })}
-              <Typography sx={{ color: "#666", fontWeight: "bold", margin: 2 }}>
-                Do it manually : Move your cursor on the image and click on the
-                4 end corners of the number plate
-              </Typography>
-
-              <div
-                style={{
-                  width: "400px",
-                  height: "60px",
-                  margin: "auto",
-                  backgroundColor: "orange",
-                  position: "relative",
-                }}
-              >
-                Number Plate
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    top: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  1
-                </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    top: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  2
-                </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    left: 0,
-                    bottom: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  3
-                </span>
-                <span
-                  style={{
-                    position: "absolute",
-                    right: 0,
-                    bottom: 0,
-                    backgroundColor: "black",
-                    padding: "3px 10px 3px 10px",
-                    borderRadius: "20px",
-                    color: "#fff",
-                  }}
-                >
-                  4
-                </span>
-              </div>
-            </>
-          )}
-
-          <br />
-
-          <div
-            style={{
-              display: "flex",
-              position: "relative",
-              width: "60%",
-              margin: 5,
+      ) : (
+        imageInfo.length > 1 && (
+          <Card
+            elevation={0}
+            sx={{
+              padding: 5,
+              position: "absolute",
+              top: "50%",
               left: "50%",
+              width: "80%",
+              textAlign: "center",
               transform: "translateX(-50%)",
             }}
           >
-            {imageInfo.lenght === 1 && 
-            <>
-              <Typography  width="50%" fontSize={13}>
-                Name : <b> {imageInfo.name} </b>
-              </Typography>
-              <Typography width="50%" fontSize={13}>
-                Size : <b> {imageInfo.size} kb </b>
-              </Typography>
-            </>}
-
-          </div>
-
-          <Button color="secondary" variant="contained" onClick={handleUpload}>
-            Upload
-          </Button>
-
-          <Button
-            color="secondary"
-            variant="outlined"
-            onClick={() => {
-              // setSelectedImage(null);
-              // setSelectedImageFolder(null);
-              // setIsResponse(false);
-              // setPointsArray([]);
-              // setMess(false);
-              window.location.reload()
-            }}
-            sx={{ margin: 2 }}
-          >
-            Remove
-          </Button>
-          
-          
-          {output && (
-            <>
-              <Divider />
-              <Typography sx={{ fontSize: 25, fontWeight: "bold", margin: 3 }}>
-                Output image:
-              </Typography>
-
-              {output.map((src: any, key: number) => {
-                return (
+            {selectedImageFolder.map((src: any, key: number) => {
+              return (
+      
+                mess ? (
+                  <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
+                ) : (
                   <img
-                    key={key}
+                  key={key}
                     style={{
                       border: "solid 1px #000",
                       padding: 5,
                       borderRadius: "10px",
-                      marginBottom: 15,
                     }}
-                    src={`data:image/*;base64,${src}`}
+                    src={src}
                     width="60%"
-                    alt="output_image"
+                    alt="image"
+                    draggable="false"
                   />
-                );
-              })}
-              <Typography>Are you satisfied with the output ?</Typography>
-              <Button
-                color="secondary"
-                variant="contained"
-                id="yes"
-                onClick={handleFeedBack}
-              >
-                Yes
-              </Button>
-              <Button
-                sx={{ margin: 2 }}
-                color="secondary"
-                id="no"
-                variant="outlined"
-                onClick={handleFeedBack}
-              >
-                No
-              </Button>
-            </>
-          )}
-        </Card>
+                )
+              );
+            })}
+
+            <br />
+
+            <div
+              style={{
+                display: "flex",
+                position: "relative",
+                width: "60%",
+                margin: 5,
+                left: "50%",
+                transform: "translateX(-50%)",
+              }}
+            >
+              {imageInfo.lenght === 1 && (
+                <>
+                  <Typography width="50%" fontSize={13}>
+                    Name : <b> {imageInfo.name} </b>
+                  </Typography>
+                  <Typography width="50%" fontSize={13}>
+                    Size : <b> {imageInfo.size} kb </b>
+                  </Typography>
+                </>
+              )}
+            </div>
+
+            <Button
+              color="secondary"
+              variant="contained"
+              onClick={handleUpload}
+            >
+              Upload
+            </Button>
+
+            <Button
+              color="secondary"
+              variant="outlined"
+              onClick={() => {
+                window.location.reload();
+              }}
+              sx={{ margin: 2 }}
+            >
+              Remove
+            </Button>
+
+            {output && (
+              <>
+                <Divider />
+                <Typography
+                  sx={{ fontSize: 25, fontWeight: "bold", margin: 3 }}
+                >
+                  Output image:
+                </Typography>
+
+                {output.map((src: any, key: number) => {
+                  return (
+                    <img
+                      key={key}
+                      style={{
+                        border: "solid 1px #000",
+                        padding: 5,
+                        borderRadius: "10px",
+                        marginBottom: 15,
+                      }}
+                      src={`data:image/*;base64,${src}`}
+                      width="60%"
+                      alt="output_image"
+                    />
+                  );
+                })}
+                <Typography>Are you satisfied with the output ?</Typography>
+                <Button
+                  color="secondary"
+                  variant="contained"
+                  id="yes"
+                  onClick={handleFeedBack}
+                >
+                  Yes
+                </Button>
+                <Button
+                  sx={{ margin: 2 }}
+                  color="secondary"
+                  id="no"
+                  variant="outlined"
+                  onClick={handleFeedBack}
+                >
+                  No
+                </Button>
+              </>
+            )}
+          </Card>
+        )
       )}
     </Box>
   );
