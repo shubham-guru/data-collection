@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import axios from "axios";
-import { Button, Card, Divider, TextField, Typography } from "@mui/material";
+import { TextField, Typography } from "@mui/material";
 import { url } from "../../baseUrl";
 import { endpoints } from "../../domain/endpoints";
 import { authToken } from "../../constants";
@@ -11,12 +11,15 @@ import { pageRoutes } from "../../routes";
 
 const Signup = () => {
   const navigation = useNavigate();
+
+
   const [userData, setUserData] = useState({
-    email: "testuser@gmail.com",
-    password: "testuser",
+    email: "",
+    password: "",
   });
 
-  const handleClick = () => {
+  const handleClick = (e:any) => {
+    e.preventDefault()
     if (userData.email.trim() === "" || userData.password.trim() === "") {
       alert("Please fill all the details !");
     } else {
@@ -52,52 +55,44 @@ const Signup = () => {
   };
 
   return (
-    <Card
-      sx={{
-        width: "50%",
-        position: "absolute",
-        top: "50%",
-        left: "50%",
-        transform: "translate(-50%, -50%)",
-        padding: 7,
-        textAlign: "center",
-      }}
-    >
-      <Typography sx={{ fontSize: 20, textAlign: "center", margin: 1 }}>
-        Signup
-      </Typography>
-      <Divider sx={{ margin: 5 }} />
-      <TextField
-        value={userData.email}
-        fullWidth
-        autoComplete="off"
-        variant="outlined"
-        type="email"
-        label="Email-id"
-        onChange={(e) => setUserData({ ...userData, email: e.target.value })}
-      />
-      <br />
-      <br />
-      <TextField
-        value={userData.password}
-        fullWidth
-        autoComplete="off"
-        variant="outlined"
-        type="password"
-        label="Password"
-        onChange={(e) => setUserData({ ...userData, password: e.target.value })}
-      />
-      <br />
-      <br />
-      <Button
-        color="warning"
-        sx={{ marginLeft: 2, backgroundColor: "orange" }}
-        variant="contained"
-        onClick={handleClick}
-      >
-        Sign up
-      </Button>
-    </Card>
+    <>
+    <form>
+      <div className="login">
+        <Typography
+          textAlign={"center"}
+          sx={{ fontSize: 20, marginBottom: 4 }}
+        >
+          Sign up
+        </Typography>
+        <TextField
+          autoComplete="off"
+          onChange={(e) =>
+            setUserData({ ...userData, email: e.target.value })
+          }
+          sx={{ marginBottom: 2 }}
+          fullWidth
+          type="email"
+          label="Email"
+        />
+        <TextField
+          autoComplete="off"
+          onChange={(e) =>
+            setUserData({ ...userData, password: e.target.value })
+          }
+          fullWidth
+          type="password"
+          label="Password"
+        />
+        <button style={{ borderRadius: "50px" }} onClick={handleClick}>
+          Sign up
+        </button>
+
+        <Typography sx={{color: '#888', fontSize: 12, marginTop: 3}} textAlign="center">Already have an account ? 
+          <Typography onClick={()=>navigation(pageRoutes.LOGIN)} sx={{fontSize: 14, cursor: 'pointer', textDecoration: 'underline'}}>LOGIN</Typography>
+        </Typography>
+      </div>
+    </form>
+  </>
   );
 };
 

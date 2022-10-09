@@ -25,18 +25,6 @@ function App() {
                 Home
             </NavLink>
         </div>
-        <div style={{ margin: '10px' }}>
-            <NavLink to={pageRoutes.LOGIN} style={({ isActive }) => ({ 
-                color: isActive ? 'orange' : 'white' })}>
-                Login
-            </NavLink>
-        </div>
-        <div style={{ margin: '10px' }}>
-            <NavLink to={pageRoutes.SIGNUP} style={({ isActive }) => ({ 
-                color: isActive ? 'orange' : 'white' })}>
-                Signup
-            </NavLink>
-        </div>
         <div style={{ position: 'absolute', right: 0, margin: '10px' }}>
           <p>DATA COLLECTION</p>
         </div>
