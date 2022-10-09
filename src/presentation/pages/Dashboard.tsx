@@ -192,11 +192,42 @@ const Dashboard = () => {
 
   const handleFeedBack = (e: any) => {
     if (e.target.id === "yes") {
-      window.location.reload();
-      Toast.fire({
-        icon: "success",
-        title: "Thanks for using the tool",
-      });
+      const config = {
+        headers: {
+          Authorization: authToken,
+        },
+      };
+      var bodyFormData = new FormData();
+      bodyFormData.append("email", location.state.email);
+      if (imageInfo[0]) {
+        for (let i = 0; i < imageInfo.length; i++) {
+          bodyFormData.append("imgs", imageInfo[i]);
+        }
+      } else {
+        bodyFormData.append("imgs", imageInfo);
+      }
+      console.log(imageInfo, "ds");
+      axios
+        .post(url + endpoints.UPLOAD_IMAGE, bodyFormData, config)
+        .then((res) => {
+          if (res.data.status === 200) {
+            setIsResponse(false);
+            setOutput(res.data.data);
+            Toast.fire({
+              icon: "success",
+              title: "Image uploaded successfully",
+            });
+            window.location.reload();
+          } else {
+            Toast.fire({
+              icon: "error",
+              title: "Something went wrong",
+            });
+          }
+        })
+        .catch((err) => {
+          alert(err);
+        });
     } else {
       setOutput(false);
       setMess(true);
@@ -415,16 +446,15 @@ const Dashboard = () => {
           >
             {selectedImageFolder.map((src: any, key: number) => {
               return mess ? (
-
-                  <>
-                <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
-                    <Typography
-                      sx={{ color: "#666", fontWeight: "bold", margin: 2 }}
-                    >
-                      Do it manually : Make a rectangle on the number plate by
-                      dragging your mouse
-                    </Typography>
-                  </>
+                <>
+                  <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
+                  <Typography
+                    sx={{ color: "#666", fontWeight: "bold", margin: 2 }}
+                  >
+                    Do it manually : Make a rectangle on the number plate by
+                    dragging your mouse
+                  </Typography>
+                </>
               ) : (
                 <>
                   <img
@@ -439,7 +469,6 @@ const Dashboard = () => {
                     alt="image"
                     draggable="false"
                   />
-                  
                 </>
               );
             })}

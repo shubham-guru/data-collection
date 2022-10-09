@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import useImage from "use-image";
 import { Stage, Layer, Rect, Image } from "react-konva";
+import { Button } from "@mui/material";
 
 type myProps = {
   imageSrc: any;
@@ -10,7 +11,7 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
   const [annotations, setAnnotations] = useState<any>([]);
   const [newAnnotation, setNewAnnotation] = useState<any>([]);
 
-    const [image] = useImage(imageSrc, "anonymous");
+  const [image] = useImage(imageSrc, "anonymous");
   const handleMouseDown = (event: {
     target: {
       getStage: () => {
@@ -45,12 +46,12 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
         width: x - sx,
         height: y - sy,
         key: annotations.length + 1,
-        image: imageSrc
+        image: imageSrc,
       };
       annotations.push(annotationToAdd);
       setNewAnnotation([]);
       setAnnotations(annotations);
-      getCoordinates(annotationToAdd, imageSrc)
+      getCoordinates(annotationToAdd, imageSrc);
     }
   };
   const handleMouseMove = (event: {
@@ -77,20 +78,19 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
       ]);
     }
   };
- 
+
   const annotationsToDraw = [...annotations, ...newAnnotation];
   return (
     <>
-    {/* <fieldset style={{borderRadius: '10px', marginBottom: 10, display: 'flex'}}> */}
-    <div style={{border: 'solid 2px #888', padding: 5,}}>
-      <Stage
-        onMouseDown={(e: any) => handleMouseDown(e)}
-        onMouseUp={(e: any) => handleMouseUp(e)}
-        onMouseMove={(e: any) => handleMouseMove(e)}
-        width={900}
-        height={700}
-      >
-            <Layer>
+      <div style={{ border: "solid 2px #888", padding: 5 }}>
+        <Stage
+          onMouseDown={(e: any) => handleMouseDown(e)}
+          onMouseUp={(e: any) => handleMouseUp(e)}
+          onMouseMove={(e: any) => handleMouseMove(e)}
+          width={900}
+          height={700}
+        >
+          <Layer>
             <Image
               image={image}
               alt="image"
@@ -98,24 +98,22 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
               width={900}
               height={700}
             />
-          {annotationsToDraw.map((value) => {
-            return (
-              <Rect
-                x={value.x}
-                y={value.y}
-                width={value.width}
-                height={value.height}
-                fill="black"
-                stroke="black"
-              />
-            );
-          })}
-        </Layer>
-        
-       
-      </Stage>
-    </div>
-    {/* </fieldset> */}
+            {annotationsToDraw.map((value) => {
+              return (
+                <Rect
+                  x={value.x}
+                  y={value.y}
+                  width={value.width}
+                  height={value.height}
+                  fill="black"
+                  stroke="black"
+                />
+              );
+            })}
+          </Layer>
+        </Stage>
+        <Button onClick={()=>setAnnotations([])} variant="outlined" sx={{margin: 2}}>Reset</Button>
+      </div>
     </>
   );
 };
