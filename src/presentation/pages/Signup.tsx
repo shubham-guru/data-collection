@@ -4,12 +4,13 @@ import { Button, Card, Divider, TextField, Typography } from "@mui/material";
 import { url } from "../../baseUrl";
 import { endpoints } from "../../domain/endpoints";
 import { authToken } from "../../constants";
-import Swal from "sweetalert2";
+import { useNavigate } from "react-router-dom";
 import { SignupData } from "../../domain/models/signupModel";
 import Toast from "../components/SweetAlert";
+import { pageRoutes } from "../../routes";
 
 const Signup = () => {
-    const [data, setData] = useState<SignupData>();
+  const navigation = useNavigate();
     const [userData, setUserData] = useState({
       email: 'testuser@gmail.com',
       password: 'testuser'
@@ -35,6 +36,7 @@ const Signup = () => {
                     icon: 'success',
                     title: 'Account has been successfully created'
                   })
+                  navigation(pageRoutes.LOGIN)
                 }else{
                       Toast.fire({
                         icon: 'error',

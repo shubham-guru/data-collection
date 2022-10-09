@@ -54,7 +54,6 @@ const Dashboard = () => {
       ]);
     }
   };
-  console.log(selectedImageFolder, "selected");
   const handleUpload = () => {
     // Global start
     setIsResponse(true);
@@ -69,9 +68,8 @@ const Dashboard = () => {
     // Global end
 
     if (mess) {
-      console.log(resImage, selectedImageFolder[0]);
       let outPutImg: any;
-      if (selectedImageFolder[0]!==undefined) {
+      if (selectedImageFolder[0] !== undefined) {
         let imgarr: any = [];
         selectedImageFolder.forEach((ele: RequestInfo | URL, idx: any) => {
           fetch(ele)
@@ -80,63 +78,86 @@ const Dashboard = () => {
               outPutImg = new File([blb], ele.toString().split("/")[3], {
                 type: "image/jpg",
               });
-              console.log(outPutImg);
+              // console.log(outPutImg, 'outputImg');
+              console.log(coordinates, "cords");
               imgarr.push(outPutImg);
               if (idx === selectedImageFolder.length - 1) {
-                console.log(idx, imgarr, "98765879279873");
+                // console.log(idx, imgarr, "98765879279873");
                 imgarr.forEach((element: string | Blob) => {
                   bodyFormData.append("imgs", element);
                 });
 
                 bodyFormData.append("coords", JSON.stringify(coordinates));
-                axios
-                  .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
-                  .then((res) => {
-                    if (res.data.status === 200) {
-                      setIsResponse(false);
-                      Toast.fire({
-                        icon: "success",
-                        title: res.data.message,
-                      });
-                      // window.location.reload();
-                    } else {
-                      Toast.fire({
-                        icon: "error",
-                        title: res.data.message,
-                      });
-                    }
-                  });
-              }
-            });
-        });
-      } 
-      else {
 
-        fetch(coordinates[0].src)
-          .then((r) => r.blob())
-          .then((blb) => {
-            outPutImg = new File([blb], coordinates[0].src.split("/")[3], { type: "image/jpg" });
-            console.log(outPutImg);
-            bodyFormData.append("imgs", outPutImg);
-            bodyFormData.append("coords", JSON.stringify(coordinates));
-            axios
-              .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
-              .then((res) => {
-                if (res.data.status === 200) {
-                  setIsResponse(false);
-                  Toast.fire({
-                    icon: "success",
-                    title: res.data.message,
-                  });
-                  // window.location.reload();
+                if (coordinates.length) {
+                  axios
+                    .post(
+                      url + endpoints.FINAL_SUBMISSION,
+                      bodyFormData,
+                      config
+                    )
+                    .then((res) => {
+                      if (res.data.status === 200) {
+                        setIsResponse(false);
+                        Toast.fire({
+                          icon: "success",
+                          title: res.data.message,
+                        });
+                        window.location.reload();
+                      } else {
+                        Toast.fire({
+                          icon: "error",
+                          title: res.data.message,
+                        });
+                      }
+                    });
                 } else {
                   Toast.fire({
                     icon: "error",
-                    title: res.data.message,
+                    title: "Please make the selection",
                   });
+                  setIsResponse(false);
                 }
+              }
+            });
+        });
+      } else {
+        if (coordinates.length) {
+          fetch(coordinates[0].src)
+            .then((r) => r.blob())
+            .then((blb) => {
+              outPutImg = new File([blb], coordinates[0].src.split("/")[3], {
+                type: "image/jpg",
               });
+              console.log(outPutImg);
+              console.log(coordinates, "dsd");
+              bodyFormData.append("imgs", outPutImg);
+              bodyFormData.append("coords", JSON.stringify(coordinates));
+              axios
+                .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
+                .then((res) => {
+                  if (res.data.status === 200) {
+                    setIsResponse(false);
+                    Toast.fire({
+                      icon: "success",
+                      title: res.data.message,
+                    });
+                    window.location.reload();
+                  } else {
+                    Toast.fire({
+                      icon: "error",
+                      title: res.data.message,
+                    });
+                  }
+                });
+            });
+        } else {
+          Toast.fire({
+            icon: "error",
+            title: "Please make the selection",
           });
+          setIsResponse(false);
+        }
       }
     } else {
       if (imageInfo[0]) {
@@ -183,7 +204,7 @@ const Dashboard = () => {
   };
 
   var coordsarr: any = [];
-  const getCoordinates = (coordinate: any, checked: any) => {
+  const getCoordinates = (coordinate: any) => {
     setCoordinates([
       ...coordinates,
       {
@@ -199,8 +220,6 @@ const Dashboard = () => {
 
     coordsarr.push(coordinates);
   };
-  console.log(resImage, "dra");
-  console.log(coordinates);
   return (
     <Box>
       <Card sx={{ textAlign: "right", padding: 2 }}>
@@ -278,10 +297,12 @@ const Dashboard = () => {
           }}
         >
           {mess ? (
-            <DrawRect
-              imageSrc={selectedImage}
-              getCoordinates={getCoordinates}
-            />
+            <>
+              <DrawRect
+                imageSrc={selectedImage}
+                getCoordinates={getCoordinates}
+              />
+            </>
           ) : (
             <img
               style={{
@@ -299,8 +320,8 @@ const Dashboard = () => {
           {mess && (
             <>
               <Typography sx={{ color: "#666", fontWeight: "bold", margin: 2 }}>
-                Do it manually : Move your cursor on the image and click on the
-                4 end corners of the number plate
+                Do it manually : Make a rectangle on the number plate by
+                dragging your mouse
               </Typography>
             </>
           )}
@@ -394,20 +415,32 @@ const Dashboard = () => {
           >
             {selectedImageFolder.map((src: any, key: number) => {
               return mess ? (
+
+                  <>
                 <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
+                    <Typography
+                      sx={{ color: "#666", fontWeight: "bold", margin: 2 }}
+                    >
+                      Do it manually : Make a rectangle on the number plate by
+                      dragging your mouse
+                    </Typography>
+                  </>
               ) : (
-                <img
-                  key={key}
-                  style={{
-                    border: "solid 1px #000",
-                    padding: 5,
-                    borderRadius: "10px",
-                  }}
-                  src={src}
-                  width="60%"
-                  alt="image"
-                  draggable="false"
-                />
+                <>
+                  <img
+                    key={key}
+                    style={{
+                      border: "solid 1px #000",
+                      padding: 5,
+                      borderRadius: "10px",
+                    }}
+                    src={src}
+                    width="60%"
+                    alt="image"
+                    draggable="false"
+                  />
+                  
+                </>
               );
             })}
 

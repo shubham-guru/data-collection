@@ -1,22 +1,16 @@
 import React, { useState } from "react";
 import useImage from "use-image";
 import { Stage, Layer, Rect, Image } from "react-konva";
-import { Typography } from "@mui/material";
 
 type myProps = {
   imageSrc: any;
   getCoordinates: any;
 };
 const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
-// console.log(imageSrc, 'imagerc')
   const [annotations, setAnnotations] = useState<any>([]);
   const [newAnnotation, setNewAnnotation] = useState<any>([]);
-  const [isChecked, setIsChecked] = useState<any[]>([]);
 
-  // for(let i = 0; i<imageSrc.length; i++){
     const [image] = useImage(imageSrc, "anonymous");
-  // }
-// console.log(image);
   const handleMouseDown = (event: {
     target: {
       getStage: () => {
@@ -59,11 +53,6 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
       getCoordinates(annotationToAdd, imageSrc)
     }
   };
-  const handleCheckBox = (e?:any)=>{
-    if(e){
-      setIsChecked(isChecked.concat(true));
-    }
-  }
   const handleMouseMove = (event: {
     target: {
       getStage: () => {
@@ -92,25 +81,24 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
   const annotationsToDraw = [...annotations, ...newAnnotation];
   return (
     <>
-    <Typography sx={{fontWeight: 'bold', margin: 2}}>Select the checkbox before manually manipulate the image</Typography>
-    <fieldset style={{borderRadius: '10px', marginBottom: 10, display: 'flex'}}>
-    {/* <input type="checkbox" onChange={(e)=>handleCheckBox(e.target.checked)} id="checkbox"/> */}
-    <div style={{width: '100%', marginBottom: '-18%', marginLeft: '14%'}}>
+    {/* <fieldset style={{borderRadius: '10px', marginBottom: 10, display: 'flex'}}> */}
+    <div style={{border: 'solid 2px #888', padding: 5,}}>
       <Stage
         onMouseDown={(e: any) => handleMouseDown(e)}
         onMouseUp={(e: any) => handleMouseUp(e)}
         onMouseMove={(e: any) => handleMouseMove(e)}
-        width={700}
-        height={500}
+        width={900}
+        height={700}
       >
             <Layer>
             <Image
               image={image}
               alt="image"
               draggable={false}
+              width={900}
+              height={700}
             />
           {annotationsToDraw.map((value) => {
-              // console.log(value, 's')
             return (
               <Rect
                 x={value.x}
@@ -119,7 +107,6 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
                 height={value.height}
                 fill="black"
                 stroke="black"
-                // key={value.key}
               />
             );
           })}
@@ -128,7 +115,7 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
        
       </Stage>
     </div>
-    </fieldset>
+    {/* </fieldset> */}
     </>
   );
 };
