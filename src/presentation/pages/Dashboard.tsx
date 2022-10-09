@@ -208,7 +208,7 @@ const Dashboard = () => {
       }
       console.log(imageInfo, "ds");
       axios
-        .post(url + endpoints.UPLOAD_IMAGE, bodyFormData, config)
+        .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
         .then((res) => {
           if (res.data.status === 200) {
             setIsResponse(false);
