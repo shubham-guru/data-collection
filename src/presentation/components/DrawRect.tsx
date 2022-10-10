@@ -54,6 +54,11 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
       getCoordinates(annotationToAdd, imageSrc);
     }
   };
+  function reset() {
+    setAnnotations([])
+    getCoordinates(null,imageSrc)
+
+  }
   const handleMouseMove = (event: {
     target: {
       getStage: () => {
@@ -82,21 +87,22 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
   const annotationsToDraw = [...annotations, ...newAnnotation];
   return (
     <>
-      <div style={{ border: "solid 2px #888", padding: 5 }}>
+      <div style={{ border: "solid 2px #888", padding: 5,width:"500px",marginLeft:"30%",marginBottom:"5%" }}>
         <Stage
           onMouseDown={(e: any) => handleMouseDown(e)}
           onMouseUp={(e: any) => handleMouseUp(e)}
           onMouseMove={(e: any) => handleMouseMove(e)}
-          width={900}
-          height={700}
+          width={500}
+          height={500}
         >
           <Layer>
             <Image
               image={image}
               alt="image"
               draggable={false}
-              width={900}
-              height={700}
+              width={500}
+              height={500}
+              
             />
             {annotationsToDraw.map((value) => {
               return (
@@ -112,7 +118,7 @@ const DrawRect: React.FC<myProps> = ({ imageSrc, getCoordinates }) => {
             })}
           </Layer>
         </Stage>
-        <Button onClick={()=>setAnnotations([])} variant="outlined" sx={{margin: 2}}>Reset</Button>
+        <Button onClick={()=>reset()} variant="outlined" sx={{margin: 2}}>Reset</Button>
       </div>
     </>
   );

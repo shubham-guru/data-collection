@@ -25,13 +25,15 @@ const Dashboard = () => {
   const [imageInfo, setImageInfo] = useState<any>([]);
   const [isResponse, setIsResponse] = useState<boolean>(false);
   const [output, setOutput] = useState<any>();
+  const [bloboutput, setBlobOutput] = useState<any>([]);
+  const [bloburl, setBlobUrl] = useState<any>([]);
   const [mess, setMess] = useState<boolean>(false);
 
   const ref = React.useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (ref.current !== null) {
-      ref.current.setAttribute("directory", "");
+      // ref.current.setAttribute("directory", "");
       ref.current.setAttribute("webkitdirectory", "");
     }
   }, [ref]);
@@ -42,17 +44,58 @@ const Dashboard = () => {
     setImageInfo(e.target.files[0]);
     setSelectedImage(URL.createObjectURL(e.target.files[0]));
   };
-
+  const allowedext = ["jpg", "jpeg", "png", "JPG", "JPEG", "PNG"];
   const onImageChangeFolder = (e: any) => {
     var imageArry: any[] = [];
     const tempArray = imageArry.concat(e.target.files);
+    console.log(tempArray[0])
     for (let i = 0; i < e.target.files.length; i++) {
-      setImageInfo((imageInfo: any) => [...imageInfo, e.target.files[i]]);
-      setSelectedImageFolder((selectedImageFolder: any) => [
-        ...selectedImageFolder,
-        URL.createObjectURL(tempArray[0][i]),
-      ]);
+      allowedext.forEach((ext) => {
+        if (e.target.files[i].name.includes(ext)) {
+          setImageInfo((imageInfo: any) => [...imageInfo, e.target.files[i]]);
+          setSelectedImageFolder((selectedImageFolder: any) => [
+            ...selectedImageFolder,
+            URL.createObjectURL(tempArray[0][i]),
+          ]);
+        }
+      });
     }
+  };
+  const b64toBlob = (b64Dataarr: any, contentType = "", sliceSize = 512) => {
+    const blobarr: any = [];
+    const bloburl: any = [];
+    b64Dataarr.forEach((b64Data: string) => {
+      const byteCharacters = atob(b64Data);
+      const byteArrays = [];
+      if (b64Data.charAt(0) == "/") {
+        contentType = "jpg";
+      } else {
+        contentType = "png";
+      }
+      for (
+        let offset = 0;
+        offset < byteCharacters.length;
+        offset += sliceSize
+      ) {
+        const slice = byteCharacters.slice(offset, offset + sliceSize);
+
+        const byteNumbers = new Array(slice.length);
+        for (let i = 0; i < slice.length; i++) {
+          byteNumbers[i] = slice.charCodeAt(i);
+        }
+
+        const byteArray = new Uint8Array(byteNumbers);
+        byteArrays.push(byteArray);
+      }
+
+      const blob = new Blob(byteArrays, { type: contentType });
+      const blburl = URL.createObjectURL(blob);
+      blobarr.push(blob);
+      bloburl.push([blburl, contentType]);
+    });
+    console.log(blobarr);
+    setBlobOutput(blobarr);
+    setBlobUrl(bloburl);
   };
   const handleUpload = () => {
     // Global start
@@ -71,13 +114,17 @@ const Dashboard = () => {
       let outPutImg: any;
       if (selectedImageFolder[0] !== undefined) {
         let imgarr: any = [];
-        selectedImageFolder.forEach((ele: RequestInfo | URL, idx: any) => {
-          fetch(ele)
+        bloburl.forEach((ele: any, idx: any) => {
+          fetch(ele[0])
             .then((r) => r.blob())
             .then((blb) => {
-              outPutImg = new File([blb], ele.toString().split("/")[3], {
-                type: "image/jpg",
-              });
+              outPutImg = new File(
+                [blb],
+                ele[0].toString().split("/")[3] + "." + ele[1],
+                {
+                  type: "image/" + ele[1],
+                }
+              );
               // console.log(outPutImg, 'outputImg');
               console.log(coordinates, "cords");
               imgarr.push(outPutImg);
@@ -126,9 +173,13 @@ const Dashboard = () => {
           fetch(coordinates[0].src)
             .then((r) => r.blob())
             .then((blb) => {
-              outPutImg = new File([blb], coordinates[0].src.split("/")[3], {
-                type: "image/jpg",
-              });
+              outPutImg = new File(
+                [blb],
+                coordinates[0].src.split("/")[3] + ".jpg",
+                {
+                  type: "image/jpg",
+                }
+              );
               console.log(outPutImg);
               console.log(coordinates, "dsd");
               bodyFormData.append("imgs", outPutImg);
@@ -173,6 +224,7 @@ const Dashboard = () => {
           if (res.data.status === 200) {
             setIsResponse(false);
             setOutput(res.data.data);
+            b64toBlob(res.data.data);
             Toast.fire({
               icon: "success",
               title: "Image uploaded successfully",
@@ -199,14 +251,17 @@ const Dashboard = () => {
       };
       var bodyFormData = new FormData();
       bodyFormData.append("email", location.state.email);
-      if (imageInfo[0]) {
-        for (let i = 0; i < imageInfo.length; i++) {
-          bodyFormData.append("imgs", imageInfo[i]);
-        }
-      } else {
-        bodyFormData.append("imgs", imageInfo);
+      console.log(bloboutput, imageInfo);
+
+      for (let i = 0; i < bloboutput.length; i++) {
+        const name = imageInfo[i] ? imageInfo[i].name : imageInfo.name;
+        bodyFormData.append(
+          "imgs",
+          new File([bloboutput[i]], name, { type: bloboutput[i].type })
+        );
       }
-      console.log(imageInfo, "ds");
+
+      console.log(imageInfo, "ds", output);
       axios
         .post(url + endpoints.FINAL_SUBMISSION, bodyFormData, config)
         .then((res) => {
@@ -229,27 +284,30 @@ const Dashboard = () => {
           alert(err);
         });
     } else {
+      console.log(selectedImageFolder, selectedImage, bloburl);
       setOutput(false);
       setMess(true);
     }
   };
 
-  var coordsarr: any = [];
-  const getCoordinates = (coordinate: any) => {
-    setCoordinates([
-      ...coordinates,
-      {
-        x: coordinate.x,
-        y: coordinate.y,
-        width: coordinate.width,
-        height: coordinate.height,
-        key: coordinate.key,
-        src: coordinate.image,
-      },
-    ]);
-    setResImage(coordinates.image);
-
-    coordsarr.push(coordinates);
+  const getCoordinates = (coordinate: any, resetflg: String) => {
+    if (coordinate) {
+      setCoordinates([
+        ...coordinates,
+        {
+          x: coordinate.x,
+          y: coordinate.y,
+          width: coordinate.width,
+          height: coordinate.height,
+          key: coordinate.key,
+          src: coordinate.image,
+        },
+      ]);
+      setResImage(coordinates.image);
+    } else {
+      console.log(resetflg);
+      setCoordinates(coordinates.filter((ele: any) => ele.src !== resetflg));
+    }
   };
   return (
     <Box>
@@ -291,7 +349,6 @@ const Dashboard = () => {
               onChange={(e) => onImageChangeFolder(e)}
               ref={ref}
               hidden
-              accept="image/*"
               type="file"
             />
           </Button>
@@ -330,7 +387,7 @@ const Dashboard = () => {
           {mess ? (
             <>
               <DrawRect
-                imageSrc={selectedImage}
+                imageSrc={bloburl[0][0]}
                 getCoordinates={getCoordinates}
               />
             </>
@@ -447,13 +504,17 @@ const Dashboard = () => {
             {selectedImageFolder.map((src: any, key: number) => {
               return mess ? (
                 <>
-                  <DrawRect imageSrc={src} getCoordinates={getCoordinates} />
-                  <Typography
+                <Typography
                     sx={{ color: "#666", fontWeight: "bold", margin: 2 }}
                   >
                     Do it manually : Make a rectangle on the number plate by
                     dragging your mouse
                   </Typography>
+                  <DrawRect
+                    imageSrc={bloburl[key][0]}
+                    getCoordinates={getCoordinates}
+                  />
+                  
                 </>
               ) : (
                 <>
